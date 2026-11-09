@@ -431,6 +431,63 @@ button:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; 
 .caixa-opcoes li { margin: 1px 0; }
 .etiqueta.escolher { background: var(--sobre-cartao); color: #fff; }
 
+/* ---------------- Busca ---------------- */
+.busca { position: relative; width: 300px; }
+.busca input {
+  width: 100%;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 7px 12px;
+}
+.busca input:focus { outline: 2px solid var(--destaque); outline-offset: 0; border-color: transparent; }
+
+.busca-resultados {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 460px;
+  max-height: 65vh;
+  overflow-y: auto;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+  z-index: 40;
+  padding: 6px;
+}
+.busca-cab { font-size: 0.8rem; color: var(--texto-suave); padding: 4px 8px 6px; }
+.busca-item {
+  display: grid;
+  grid-template-columns: 86px 14px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-size: 0.88rem;
+}
+.busca-item:hover, .busca-item.ativo { background: var(--superficie-2); }
+.busca-item .quando { color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+.busca-item .bolinha { width: 12px; height: 12px; border-radius: 3px; }
+.busca-item .nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.busca-item .nome small { color: var(--texto-suave); }
+.busca-item .tipo-txt { color: var(--texto-suave); font-size: 0.8rem; white-space: nowrap; }
+.busca-item.feita .nome { text-decoration: line-through; color: var(--texto-suave); }
+.busca-vazio { padding: 10px 8px; color: var(--texto-suave); font-size: 0.9rem; }
+
+@keyframes piscar-busca {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  25%, 75% { box-shadow: 0 0 0 4px var(--destaque); }
+  50% { box-shadow: 0 0 0 2px var(--destaque); }
+}
+.tarefa.achada { animation: piscar-busca 1.6s ease-in-out 2; }
+
 /* Aviso rápido (toast) */
 .aviso {
   position: fixed;

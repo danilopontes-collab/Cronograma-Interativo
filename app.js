@@ -1273,6 +1273,138 @@ async function restaurarBackup(arquivo) {
   aviso(`Backup restaurado: ${tarefas.length} tarefas.`);
 }
 
+/* ---------------- Busca ---------------- */
+
+/** Minúsculas e sem acentos, para "diabetes" achar "Diabetes" e "gestacao" achar "Gestação" */
+function normalizar(texto) {
+  return String(texto ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
+function textoPesquisavel(t) {
+  const partes = [t.titulo, t.observacao, AREAS[t.area]?.nome, t.curso];
+  if (t.opcoes) partes.push(t.opcoes.medway, ...(t.opcoes.medcof || []));
+  return normalizar(partes.join(' '));
+}
+
+let resultadosBusca = [];
+let indiceBusca = -1;
+
+function fecharBusca() {
+  const caixa = document.getElementById('busca-resultados');
+  caixa.hidden = true;
+  document.getElementById('busca').setAttribute('aria-expanded', 'false');
+  indiceBusca = -1;
+}
+
+function marcarAtivo() {
+  document.querySelectorAll('.busca-item').forEach((b, i) => {
+    b.classList.toggle('ativo', i === indiceBusca);
+    b.setAttribute('aria-selected', i === indiceBusca);
+    if (i === indiceBusca) b.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+function buscar() {
+  const entrada = document.getElementById('busca');
+  const caixa = document.getElementById('busca-resultados');
+  const termos = normalizar(entrada.value).split(/\s+/).filter(Boolean);
+  caixa.replaceChildren();
+  indiceBusca = -1;
+
+  if (termos.join('').length < 2) {
+    fecharBusca();
+    return;
+  }
+
+  resultadosBusca = estado.dados.tarefas
+    .filter((t) => {
+      const txt = textoPesquisavel(t);
+      return termos.every((termo) => txt.includes(termo));
+    })
+    .sort((a, b) => a.data.localeCompare(b.data) || (a.ordem ?? 0) - (b.ordem ?? 0));
+
+  const LIMITE = 60;
+  const total = resultadosBusca.length;
+  resultadosBusca = resultadosBusca.slice(0, LIMITE);
+
+  if (total === 0) {
+    caixa.appendChild(el('div', 'busca-vazio', 'Nada encontrado. Tente outra palavra.'));
+  } else {
+    caixa.appendChild(el('div', 'busca-cab',
+      total > LIMITE ? `${total} resultados (mostrando os ${LIMITE} primeiros)` : `${total} ${total === 1 ? 'resultado' : 'resultados'}`));
+    resultadosBusca.forEach((t, i) => {
+      const item = el('button', `busca-item${t.concluida ? ' feita' : ''}`);
+      item.type = 'button';
+      item.setAttribute('role', 'option');
+      item.dataset.indice = i;
+      item.appendChild(el('span', 'quando', formatar(deChave(t.data))));
+      const bolinha = el('span', 'bolinha');
+      bolinha.style.background = `var(--${t.area}-${t.tipo})`;
+      bolinha.title = `${AREAS[t.area]?.nome} – ${TIPOS[t.tipo]}`;
+      item.appendChild(bolinha);
+      const nome = el('span', 'nome', t.titulo);
+      if (t.tipo === 'aula' && t.opcoes?.medcof?.length && !t.dividida) {
+        const extra = t.opcoes.medcof.filter((a) => a !== t.titulo).join('; ');
+        if (extra) nome.appendChild(el('small', null, `  · Medcof: ${extra}`));
+      }
+      nome.title = nome.textContent;
+      item.appendChild(nome);
+      item.appendChild(el('span', 'tipo-txt', `${ICONES[t.tipo]} ${TIPOS[t.tipo]}${t.concluida ? ' ✓' : ''}`));
+      caixa.appendChild(item);
+    });
+  }
+  caixa.hidden = false;
+  entrada.setAttribute('aria-expanded', 'true');
+}
+
+/** Vai até o dia da tarefa e faz o cartão piscar */
+function irParaTarefa(t) {
+  if (!t) return;
+  fecharBusca();
+  estado.cursor = deChave(t.data);
+  if (estado.visao === 'mes' || estado.visao === 'dia') estado.visao = 'semana';
+  salvarPrefs();
+  render();
+  const cartao = document.querySelector(`.tarefa[data-id="${CSS.escape(t.id)}"]`);
+  if (cartao) {
+    cartao.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    cartao.classList.add('achada');
+    cartao.addEventListener('animationend', () => cartao.classList.remove('achada'), { once: true });
+  }
+}
+
+function ativarBusca() {
+  const entrada = document.getElementById('busca');
+  const caixa = document.getElementById('busca-resultados');
+
+  entrada.addEventListener('input', buscar);
+  entrada.addEventListener('focus', () => { if (entrada.value.trim().length >= 2) buscar(); });
+  entrada.addEventListener('keydown', (e) => {
+    const n = resultadosBusca.length;
+    if (e.key === 'Escape') {
+      if (!caixa.hidden) { fecharBusca(); } else { entrada.value = ''; entrada.blur(); }
+    } else if (e.key === 'ArrowDown' && n) {
+      e.preventDefault();
+      indiceBusca = (indiceBusca + 1) % n;
+      marcarAtivo();
+    } else if (e.key === 'ArrowUp' && n) {
+      e.preventDefault();
+      indiceBusca = (indiceBusca - 1 + n) % n;
+      marcarAtivo();
+    } else if (e.key === 'Enter' && n && !caixa.hidden) {
+      e.preventDefault();
+      irParaTarefa(resultadosBusca[Math.max(indiceBusca, 0)]);
+    }
+  });
+  caixa.addEventListener('click', (e) => {
+    const item = e.target.closest('.busca-item');
+    if (item) irParaTarefa(resultadosBusca[Number(item.dataset.indice)]);
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.busca')) fecharBusca();
+  });
+}
+
 /* ---------------- Navegação ---------------- */
 
 function mover(direcao) {
@@ -1360,6 +1492,7 @@ function iniciar() {
     if (arq) await restaurarBackup(arq);
   });
 
+  ativarBusca();
   aplicarTema();
   renderLegenda();
   render();

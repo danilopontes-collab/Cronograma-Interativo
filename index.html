@@ -30,6 +30,12 @@
       <span id="rotulo-periodo" class="rotulo-periodo"></span>
     </div>
 
+    <div class="busca" role="search">
+      <input type="search" id="busca" placeholder="🔍 Buscar tema (ex.: Diabetes)" autocomplete="off"
+             aria-label="Buscar tarefas" aria-controls="busca-resultados" aria-expanded="false">
+      <div id="busca-resultados" class="busca-resultados" role="listbox" hidden></div>
+    </div>
+
     <button type="button" id="btn-tema" class="btn" title="Alternar modo claro/escuro"></button>
     <button type="button" id="btn-nova" class="btn btn-primario">+ Nova tarefa</button>
   </header>
