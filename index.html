@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calendário de Estudos – Residência</title>
+  <script>
+    // Aplica o tema salvo antes de desenhar a página (evita "piscar").
+    try {
+      var p = JSON.parse(localStorage.getItem('calendarioResidencia.preferencias')) || {};
+      if (p.tema === 'claro') document.documentElement.dataset.tema = 'claro';
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <h1 class="marca">Calendário de Estudos</h1>
+
+    <div class="grupo-visao" role="group" aria-label="Visão">
+      <button type="button" class="btn-visao" data-visao="dia">Dia</button>
+      <button type="button" class="btn-visao" data-visao="semana">Semana</button>
+      <button type="button" class="btn-visao" data-visao="mes">Mês</button>
+    </div>
+
+    <div class="navegacao">
+      <button type="button" id="btn-anterior" class="btn-icone" title="Período anterior" aria-label="Período anterior">‹</button>
+      <button type="button" id="btn-hoje" class="btn">Hoje</button>
+      <button type="button" id="btn-proximo" class="btn-icone" title="Próximo período" aria-label="Próximo período">›</button>
+      <span id="rotulo-periodo" class="rotulo-periodo"></span>
+    </div>
+
+    <button type="button" id="btn-tema" class="btn" title="Alternar modo claro/escuro"></button>
+    <button type="button" id="btn-nova" class="btn btn-primario">+ Nova tarefa</button>
+  </header>
+
+  <div class="corpo">
+    <main id="calendario" class="calendario" aria-live="polite"></main>
+
+    <aside class="lateral">
+      <section class="painel" id="painel-progresso">
+        <h2>Progresso</h2>
+        <div class="grupo-visao grupo-pequeno" role="group" aria-label="Período do progresso">
+          <button type="button" class="btn-visao" data-periodo="dia">Dia</button>
+          <button type="button" class="btn-visao" data-periodo="semana">Semana</button>
+          <button type="button" class="btn-visao" data-periodo="mes">Mês</button>
+        </div>
+        <p id="prog-rotulo" class="prog-rotulo"></p>
+        <div id="prog-conteudo"></div>
+      </section>
+
+      <section class="painel">
+        <h2>Cronograma</h2>
+        <p id="info-cronograma" class="texto-suave"></p>
+        <div class="botoes-backup">
+          <button type="button" id="btn-carregar-cronograma" class="btn">📅 Carregar cronograma 2027</button>
+          <button type="button" id="btn-replanejar" class="btn">↻ Replanejar atrasadas</button>
+        </div>
+        <p id="info-atrasadas" class="texto-suave pequeno"></p>
+      </section>
+
+      <section class="painel">
+        <h2>Legenda</h2>
+        <div id="legenda" class="legenda"></div>
+      </section>
+
+      <section class="painel">
+        <h2>Backup</h2>
+        <p class="texto-suave">Seus dados ficam só neste navegador. Faça um backup de vez em quando e guarde o arquivo em um lugar seguro.</p>
+        <div class="botoes-backup">
+          <button type="button" id="btn-exportar" class="btn">⬇ Exportar backup</button>
+          <button type="button" id="btn-restaurar" class="btn">⬆ Restaurar backup</button>
+        </div>
+        <p id="info-backup" class="texto-suave pequeno"></p>
+        <input type="file" id="arquivo-backup" accept=".json,application/json" hidden>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Janela: criar / editar tarefa -->
+  <dialog id="dlg-tarefa" class="dialogo" aria-labelledby="dlg-tarefa-titulo">
+    <form id="form-tarefa" novalidate>
+      <h2 id="dlg-tarefa-titulo">Nova tarefa</h2>
+
+      <label class="campo">
+        <span>Título</span>
+        <input type="text" id="f-titulo" maxlength="200" autocomplete="off">
+      </label>
+
+      <div class="campo">
+        <span>Tipo</span>
+        <div class="segmentado" role="radiogroup" aria-label="Tipo">
+          <label><input type="radio" name="tipo" value="aula" checked><span>▶ Aula</span></label>
+          <label><input type="radio" name="tipo" value="questoes"><span>✎ Questões</span></label>
+          <label><input type="radio" name="tipo" value="revisao"><span>↻ Revisão</span></label>
+        </div>
+      </div>
+
+      <div class="linha-campos">
+        <label class="campo">
+          <span>Grande área</span>
+          <select id="f-area"></select>
+        </label>
+        <label class="campo campo-data">
+          <span>Data</span>
+          <input type="text" id="f-data" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" autocomplete="off">
+        </label>
+        <label class="campo">
+          <span>Curso</span>
+          <select id="f-curso">
+            <option value="">—</option>
+            <option value="Medway">Medway</option>
+            <option value="Medcof">Medcof</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="f-opcoes" class="caixa-opcoes" hidden></div>
+
+      <div id="f-bloco-questoes" class="linha-campos">
+        <label class="campo">
+          <span>Questões feitas</span>
+          <input type="number" id="f-feitas" min="0" step="1" inputmode="numeric">
+        </label>
+        <label class="campo">
+          <span>Acertos</span>
+          <input type="number" id="f-acertos" min="0" step="1" inputmode="numeric">
+        </label>
+      </div>
+
+      <label class="campo">
+        <span>Observação <small>(opcional)</small></span>
+        <textarea id="f-obs" rows="3" maxlength="2000"></textarea>
+      </label>
+
+      <div class="linha-campos">
+        <label class="check">
+          <input type="checkbox" id="f-concluida"> Concluída
+        </label>
+        <label class="check" title="Tarefas com data fixa (ex.: simulados) não mudam de dia ao replanejar.">
+          <input type="checkbox" id="f-fixa"> Data fixa (não mover ao replanejar)
+        </label>
+      </div>
+
+      <p id="f-erro" class="erro" role="alert"></p>
+
+      <div class="acoes">
+        <button type="button" id="btn-excluir" class="btn btn-perigo">Excluir</button>
+        <span class="espaco"></span>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn btn-primario">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Janela: registrar questões ao concluir -->
+  <dialog id="dlg-questoes" class="dialogo dialogo-pequeno" aria-labelledby="dlg-questoes-titulo">
+    <form id="form-questoes" novalidate>
+      <h2 id="dlg-questoes-titulo">Concluir questões</h2>
+      <p id="q-nome" class="texto-suave"></p>
+      <div class="linha-campos">
+        <label class="campo">
+          <span>Quantas você fez?</span>
+          <input type="number" id="q-feitas" min="1" step="1" inputmode="numeric">
+        </label>
+        <label class="campo">
+          <span>Quantas acertou?</span>
+          <input type="number" id="q-acertos" min="0" step="1" inputmode="numeric">
+        </label>
+      </div>
+      <p id="q-erro" class="erro" role="alert"></p>
+      <div class="acoes">
+        <span class="espaco"></span>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn btn-primario">Concluir</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Janela: replanejar -->
+  <dialog id="dlg-replanejar" class="dialogo" aria-labelledby="r-titulo">
+    <form id="form-replanejar" novalidate>
+      <h2 id="r-titulo">Replanejar tarefas atrasadas</h2>
+      <p class="texto-suave">As tarefas não concluídas de dias que já passaram vão para os próximos dias, na mesma ordem. O restante do cronograma é empurrado só o necessário, até a folga absorver o atraso. Tarefas concluídas e com data fixa não mudam.</p>
+      <label class="check">
+        <input type="checkbox" id="r-sabado"> Usar os sábados como dia de reposição
+      </label>
+      <div id="r-resumo" class="caixa-opcoes"></div>
+      <div class="acoes">
+        <span class="espaco"></span>
+        <button type="button" class="btn" data-fechar>Cancelar</button>
+        <button type="submit" class="btn btn-primario">Replanejar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Janela: confirmação -->
+  <dialog id="dlg-confirmar" class="dialogo dialogo-pequeno" aria-labelledby="c-titulo">
+    <form method="dialog">
+      <h2 id="c-titulo"></h2>
+      <p id="c-texto"></p>
+      <div class="acoes">
+        <span class="espaco"></span>
+        <button type="submit" value="nao" class="btn">Cancelar</button>
+        <button type="submit" value="sim" id="c-sim" class="btn btn-perigo"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="cronograma.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

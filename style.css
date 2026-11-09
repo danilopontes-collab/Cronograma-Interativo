@@ -1,0 +1,452 @@
+/* =========================================================
+   Calendário de Estudos – tema escuro
+   ========================================================= */
+
+:root {
+  color-scheme: dark;
+
+  /* Base */
+  --fundo: #111318;
+  --superficie: #1a1d24;
+  --superficie-2: #22262f;
+  --borda: #2f3440;
+  --texto: #e8eaef;
+  --texto-suave: #a3a9b6;
+  --destaque: #6ea8ff;
+  --hoje: #2b3a55;
+  --perigo: #ef6b6b;
+
+  --fundo-fds: #161920;
+  --trilho: #111318;
+  --sombra: rgba(0,0,0,0.3);
+  --sobre-destaque: #0d1320;
+
+  /* Texto sobre os cartões (todos os tons são médios, texto escuro) */
+  --sobre-cartao: #15171c;
+
+  /* Três tons próximos por grande área: Aula (um pouco mais fechado),
+     Questões (médio) e Revisão (um pouco mais claro) */
+
+  /* Clínica Médica – laranja */
+  --cm-aula: #e8822e;
+  --cm-questoes: #f0913f;
+  --cm-revisao: #f6a258;
+
+  /* Cirurgia – azul */
+  --cir-aula: #4f86dc;
+  --cir-questoes: #6095e5;
+  --cir-revisao: #75a6ed;
+
+  /* Ginecologia e Obstetrícia – roxo */
+  --go-aula: #9c70d7;
+  --go-questoes: #a97fe0;
+  --go-revisao: #b891e7;
+
+  /* Pediatria – amarelo */
+  --ped-aula: #e9bf2e;
+  --ped-questoes: #f5cc3a;
+  --ped-revisao: #fbd95c;
+
+  /* Medicina Preventiva – verde */
+  --prev-aula: #3fae6a;
+  --prev-questoes: #4fbb78;
+  --prev-revisao: #67c78b;
+
+  --raio: 8px;
+  font-size: 15px;
+}
+
+/* ---------------- Modo claro ---------------- */
+:root[data-tema="claro"] {
+  color-scheme: light;
+  --fundo: #f3f4f7;
+  --superficie: #ffffff;
+  --superficie-2: #eef0f4;
+  --borda: #d6d9e0;
+  --texto: #1b1e25;
+  --texto-suave: #5b6271;
+  --destaque: #2f6fdb;
+  --hoje: #e6efff;
+  --fundo-fds: #f8f9fb;
+  --trilho: #d6d9e0;
+  --sombra: rgba(20,30,50,0.15);
+  --sobre-destaque: #ffffff;
+  --perigo: #c93636;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+/* ---------------- Topo ---------------- */
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 20px;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borda);
+  flex-wrap: wrap;
+}
+
+.marca { font-size: 1.15rem; margin: 0; font-weight: 600; }
+
+.grupo-visao {
+  display: inline-flex;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  overflow: hidden;
+}
+.btn-visao {
+  background: transparent;
+  border: 0;
+  padding: 7px 16px;
+  color: var(--texto-suave);
+}
+.btn-visao + .btn-visao { border-left: 1px solid var(--borda); }
+.btn-visao:hover { background: var(--superficie-2); color: var(--texto); }
+.btn-visao.ativo { background: var(--destaque); color: var(--sobre-destaque); font-weight: 600; }
+
+.navegacao { display: flex; align-items: center; gap: 8px; flex: 1; }
+
+.btn, .btn-icone {
+  background: var(--superficie-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 7px 14px;
+}
+.btn-icone { padding: 4px 12px; font-size: 1.3rem; line-height: 1.2; }
+.btn:hover, .btn-icone:hover { border-color: var(--destaque); }
+.btn-primario { background: var(--destaque); color: var(--sobre-destaque); border-color: var(--destaque); font-weight: 600; }
+.btn-primario:hover { filter: brightness(1.1); }
+
+.rotulo-periodo { font-size: 1.1rem; font-weight: 600; margin-left: 10px; }
+
+button:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+
+/* ---------------- Corpo ---------------- */
+.corpo { flex: 1; display: flex; min-height: 0; }
+
+.calendario { flex: 1; min-width: 0; overflow: auto; padding: 16px 20px; }
+
+.lateral {
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--borda);
+  background: var(--superficie);
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.painel h2 { font-size: 0.95rem; margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-suave); }
+.texto-suave { color: var(--texto-suave); margin: 0; font-size: 0.9rem; }
+
+/* ---------------- Painel de progresso ---------------- */
+.grupo-pequeno { display: flex; }
+.grupo-pequeno .btn-visao { flex: 1; padding: 5px 8px; font-size: 0.85rem; }
+.prog-rotulo { margin: 10px 0 12px; font-weight: 600; font-size: 0.9rem; }
+
+.prog-bloco {
+  background: var(--superficie-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.prog-bloco h3 { margin: 0 0 6px; font-size: 0.8rem; color: var(--texto-suave); font-weight: 600; }
+.prog-numero { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.prog-sub { font-size: 0.82rem; color: var(--texto-suave); }
+.prog-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.barra { height: 8px; border-radius: 4px; background: var(--trilho); overflow: hidden; margin-top: 8px; }
+.barra > div { height: 100%; border-radius: 4px; background: var(--destaque); }
+
+.prog-area { display: grid; grid-template-columns: 52px 1fr 76px; gap: 8px; align-items: center; font-size: 0.82rem; padding: 4px 0; }
+.prog-area .barra { margin-top: 0; }
+.prog-area .valor { text-align: right; font-variant-numeric: tabular-nums; }
+.prog-area .sem-dados { color: var(--texto-suave); }
+
+/* Legenda */
+.legenda { display: grid; grid-template-columns: 1fr repeat(3, 46px); gap: 6px; align-items: center; font-size: 0.85rem; }
+.legenda .cab { color: var(--texto-suave); font-size: 0.75rem; text-align: center; }
+.legenda .amostra { height: 22px; border-radius: 4px; }
+
+/* ---------------- Visão Semana ---------------- */
+.grade-semana {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(125px, 1fr));
+  gap: 10px;
+  min-height: 100%;
+}
+
+.dia-coluna {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+}
+.dia-coluna.hoje { border-color: var(--destaque); background: var(--hoje); }
+.dia-coluna.fim-semana { background: var(--fundo-fds); }
+.dia-coluna.fim-semana.hoje { background: var(--hoje); }
+
+.dia-cab {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--borda);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.dia-cab .nome { font-weight: 600; }
+.dia-cab .data { color: var(--texto-suave); font-size: 0.85rem; }
+.hoje .dia-cab .data { color: var(--destaque); font-weight: 600; }
+
+.lista-tarefas {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.vazio { color: var(--texto-suave); font-size: 0.8rem; text-align: center; padding: 10px 0; opacity: 0.7; }
+
+/* ---------------- Visão Mês ---------------- */
+.cab-mes, .grade-mes { display: grid; grid-template-columns: repeat(7, minmax(110px, 1fr)); gap: 6px; }
+.cab-mes { margin-bottom: 6px; }
+.cab-mes div { text-align: center; color: var(--texto-suave); font-size: 0.85rem; font-weight: 600; padding: 4px 0; }
+
+.celula-mes {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+}
+.celula-mes.outro-mes { opacity: 0.45; }
+.celula-mes.hoje { border-color: var(--destaque); background: var(--hoje); }
+.celula-mes .num { padding: 4px 8px; font-size: 0.85rem; color: var(--texto-suave); font-weight: 600; }
+.celula-mes.hoje .num { color: var(--destaque); }
+.celula-mes .lista-tarefas { padding: 0 6px 6px; gap: 4px; max-height: 180px; overflow-y: auto; }
+
+/* ---------------- Visão Dia ---------------- */
+.visao-dia { max-width: 820px; margin: 0 auto; }
+.visao-dia .dia-coluna { min-height: 60vh; }
+.visao-dia .dia-cab { padding: 12px 16px; }
+.visao-dia .dia-cab .nome { font-size: 1.1rem; }
+.visao-dia .lista-tarefas { padding: 12px; gap: 8px; }
+
+/* ---------------- Cartão de tarefa ---------------- */
+.tarefa {
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  color: var(--sobre-cartao);
+  box-shadow: 0 1px 2px var(--sombra);
+}
+
+.tarefa.area-cm.tipo-aula     { background: var(--cm-aula); }
+.tarefa.area-cm.tipo-questoes { background: var(--cm-questoes); }
+.tarefa.area-cm.tipo-revisao  { background: var(--cm-revisao); }
+.tarefa.area-cir.tipo-aula     { background: var(--cir-aula); }
+.tarefa.area-cir.tipo-questoes { background: var(--cir-questoes); }
+.tarefa.area-cir.tipo-revisao  { background: var(--cir-revisao); }
+.tarefa.area-go.tipo-aula     { background: var(--go-aula); }
+.tarefa.area-go.tipo-questoes { background: var(--go-questoes); }
+.tarefa.area-go.tipo-revisao  { background: var(--go-revisao); }
+.tarefa.area-ped.tipo-aula     { background: var(--ped-aula); }
+.tarefa.area-ped.tipo-questoes { background: var(--ped-questoes); }
+.tarefa.area-ped.tipo-revisao  { background: var(--ped-revisao); }
+.tarefa.area-prev.tipo-aula     { background: var(--prev-aula); }
+.tarefa.area-prev.tipo-questoes { background: var(--prev-questoes); }
+.tarefa.area-prev.tipo-revisao  { background: var(--prev-revisao); }
+
+.marcar {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 4px;
+  border: 2px solid currentColor;
+  background: transparent;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1;
+}
+.tarefa.concluida .marcar::after { content: "✓"; font-weight: 700; }
+
+.tarefa-corpo { flex: 1; min-width: 0; cursor: pointer; }
+.tarefa-titulo { font-weight: 600; word-wrap: break-word; }
+.tarefa-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.etiqueta {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.14);
+  letter-spacing: 0.02em;
+}
+.etiqueta.tipo { background: rgba(255,255,255,0.55); }
+.tarefa-obs { margin-top: 4px; font-size: 0.82rem; opacity: 0.9; white-space: pre-wrap; }
+
+.tarefa.concluida { opacity: 0.65; }
+.tarefa.atrasada { box-shadow: 0 0 0 2px var(--perigo); }
+.etiqueta.atrasada-tag { background: var(--perigo); color: #fff; }
+.etiqueta.fixa-tag { background: rgba(0,0,0,0.55); color: #fff; }
+.tarefa.concluida .tarefa-titulo { text-decoration: line-through; }
+
+/* Arrastar e soltar */
+.tarefa[draggable="true"] { cursor: grab; }
+.tarefa[draggable="true"]:active { cursor: grabbing; }
+.tarefa.arrastando { opacity: 0.3; }
+.indicador-soltar {
+  list-style: none;
+  height: 4px;
+  margin: -1px 0;
+  border-radius: 2px;
+  background: var(--destaque);
+  box-shadow: 0 0 6px var(--destaque);
+}
+.alvo-soltar { outline: 2px dashed var(--destaque); outline-offset: -2px; }
+.alvo-soltar .vazio { display: none; }
+
+/* Botão "+" de cada dia */
+.btn-add-dia {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--texto-suave);
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.55;
+}
+.btn-add-dia:hover, .btn-add-dia:focus-visible { opacity: 1; border-color: var(--borda); color: var(--texto); background: var(--superficie-2); }
+.dia-cab .lado { display: flex; align-items: center; gap: 6px; }
+.celula-mes .topo-celula { display: flex; justify-content: space-between; align-items: center; padding-right: 4px; }
+.celula-mes .btn-add-dia { opacity: 0; }
+.celula-mes:hover .btn-add-dia, .celula-mes .btn-add-dia:focus-visible { opacity: 1; }
+
+.marcar:hover { background: rgba(255,255,255,0.35); }
+.tarefa-corpo:hover .tarefa-titulo { text-decoration: underline; text-underline-offset: 2px; }
+.tarefa.concluida .tarefa-corpo:hover .tarefa-titulo { text-decoration: line-through underline; }
+
+/* ---------------- Backup ---------------- */
+.botoes-backup { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.pequeno { font-size: 0.8rem; margin-top: 8px; }
+
+/* ---------------- Janelas (dialog) ---------------- */
+.dialogo {
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: var(--superficie);
+  color: var(--texto);
+  padding: 22px 24px;
+  width: min(560px, calc(100vw - 32px));
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+}
+.dialogo-pequeno { width: min(420px, calc(100vw - 32px)); }
+.dialogo::backdrop { background: rgba(5, 8, 15, 0.6); }
+.dialogo h2 { margin: 0 0 16px; font-size: 1.2rem; }
+.dialogo form { display: flex; flex-direction: column; gap: 14px; }
+.dialogo p { margin: 0; }
+
+.campo { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+.campo > span { font-size: 0.85rem; color: var(--texto-suave); font-weight: 600; }
+.campo small { font-weight: 400; }
+.campo-data { flex: 0 0 130px; }
+
+.campo input[type="text"], .campo input[type="number"], .campo select, .campo textarea {
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  padding: 8px 10px;
+  width: 100%;
+}
+.campo textarea { resize: vertical; }
+.campo input:focus, .campo select:focus, .campo textarea:focus { outline: 2px solid var(--destaque); outline-offset: 0; border-color: transparent; }
+.campo .invalido { border-color: var(--perigo); }
+
+.linha-campos { display: flex; gap: 12px; }
+
+.segmentado { display: inline-flex; border: 1px solid var(--borda); border-radius: 8px; overflow: hidden; align-self: flex-start; }
+.segmentado label { cursor: pointer; }
+.segmentado input { position: absolute; opacity: 0; pointer-events: none; }
+.segmentado span { display: block; padding: 7px 16px; color: var(--texto-suave); }
+.segmentado label + label span { border-left: 1px solid var(--borda); }
+.segmentado input:checked + span { background: var(--destaque); color: var(--sobre-destaque); font-weight: 600; }
+.segmentado input:focus-visible + span { outline: 2px solid var(--destaque); outline-offset: -2px; }
+
+.check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.check input { width: 17px; height: 17px; accent-color: var(--destaque); }
+
+.erro { color: var(--perigo); font-size: 0.9rem; min-height: 1.2em; }
+.erro:empty { display: none; }
+
+.acoes { display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+.espaco { flex: 1; }
+.btn-perigo { background: transparent; border-color: var(--perigo); color: var(--perigo); }
+.btn-perigo:hover { background: var(--perigo); color: #fff; border-color: var(--perigo); }
+
+/* Escolha Medway / Medcof */
+.caixa-opcoes {
+  border: 1px solid var(--borda);
+  border-left: 4px solid var(--destaque);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: var(--superficie-2);
+  font-size: 0.88rem;
+}
+.caixa-opcoes p { margin: 0 0 6px; }
+.caixa-opcoes ul { margin: 2px 0 8px; padding-left: 20px; }
+.caixa-opcoes li { margin: 1px 0; }
+.etiqueta.escolher { background: var(--sobre-cartao); color: #fff; }
+
+/* Aviso rápido (toast) */
+.aviso {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: var(--texto);
+  color: var(--fundo);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  z-index: 50;
+}
+
+/* Versão compacta (mês) */
+.compacta { padding: 3px 6px; font-size: 0.78rem; gap: 6px; }
+.compacta .marcar { width: 14px; height: 14px; font-size: 10px; border-width: 1.5px; }
+.compacta .tarefa-titulo { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
